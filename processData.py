@@ -21,7 +21,7 @@ def normalize_image(image):
 
 # Cropping the image to remove the un-necessary top (sky) and bottom pixels (bonet)
 def crop_image(image):
-    return image[140:-120,:]
+    return image[40:-20,:]
 
 def random_brightness(image):
 	# randomly select the gamma values
@@ -48,10 +48,10 @@ def get_csv_data(file):
     with open(file,'r') as f:
         reader = csv.reader(f)
         next(reader,None)
-        for left_img, center_img, right_img, steering, _ , _ , _ in reader:
+        for center_img, left_img, right_img, steering, _ , _ , _ in reader:
             angle = float(steering)
-            image_names.append ([left_img.strip() , center_img.strip(), right_img.strip()])
-            steering_angles.append([angle - steering_offset, angle, angle+ steering_offset])
+            image_names.append ([center_img.strip() , left_img.strip(), right_img.strip()])
+            steering_angles.append([angle , angle + steering_offset, angle  - steering_offset])
     return image_names, steering_angles
 
 # Fetch image filenames and steering_angles randomly while limiting the number of straight path(angle=0) data
@@ -61,17 +61,18 @@ def fetch_images(X_train, y_train, batch_size):
     zero_count = 0
     images_and_angles = [] # to store image file names and angles
     while (count < batch_size):
-        index = np.random.ranint(0,len(X_train))
+        index = np.random.randint(0,len(X_train))
         angle = y_train[index]
         image = X_train[index]
-        if(abs(angle)<thresh):
+        # print (angle)
+        if(-thresh<angle[0]<thresh):
             if(zero_count<15):
                 images_and_angles.append((image,angle))
                 zero_count = zero_count + 1
                 count = count + 1
-            else:
-                images_and_angles.append((image,angle))
-                count = count + 1
+        else:
+            images_and_angles.append((image,angle))
+            count = count + 1
 
     return images_and_angles
 
@@ -80,12 +81,14 @@ def generate_batch(X_train, y_train, batch_size=BatchSize):
     while True:
         X_batch = []
         y_batch = []
-        images_and_angles=fetch_images(X_train,y_train,batch_size)
+        images_and_angles = fetch_images(X_train, y_train, batch_size)
         # To read images from the list feteched using the fetch_images function
+        # print (images_and_angles)
         for image_file , angle in images_and_angles:
             # To ranomly select left/center/right image
             ind  = np.random.randint(0,3)
-            raw_image = cv2.imread(imPath+image_file[ind])
+            raw_image = cv2.imread("data" + "/" + image_file[ind])
+
             raw_angle = float(angle[ind])
             # Process the image before yielding the dataset
             image = process_image(raw_image)

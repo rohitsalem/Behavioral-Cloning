@@ -5,7 +5,7 @@
 
 import tensorflow as tf
 import numpy as np
-import processimage_lcr
+import processData
 import json
 import h5py
 
@@ -19,7 +19,7 @@ from keras.regularizers import l2
 from keras.callbacks import ModelCheckpoint
 import keras.backend.tensorflow_backend as KTF
 import os
-dataPath =  "../../dataset/yaml_files/data_lcr.csv"
+dataPath =  "data/driving_log.csv"
 
 GPU_FRACTION = 0.5
 # Function to set the fraction of GPU to use
@@ -33,11 +33,11 @@ def get_session(gpu_fraction=GPU_FRACTION):
         return tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 KTF.set_session(get_session())
 
-# Defining model to train. Inspired from Nvidia- End-to-end model for cars 
+# Defining model to train. Inspired from Nvidia- End-to-end model for cars
 def get_model():
 	model = Sequential([
 	# Normalizimg the image to -1.0 to 1.0
-		Lambda(processimage_lcr.normalize_image, input_shape=(66, 200, 3)),
+		Lambda(processData.normalize_image, input_shape=(66, 200, 3)),
 		# Convolutional layer 1 24@31x98 | 5x5 kernel | 2x2 stride | elu activation
 		Conv2D(24, (5,5),kernel_initializer ="he_normal", activation= 'elu', padding = 'valid', strides = (2,2), kernel_regularizer= l2(0.001)),
 		# Dropout with drop probability of .1 (keep probability of .9)
@@ -82,8 +82,8 @@ def get_model():
 
 if __name__=="__main__":
 
-	X_train,y_train = processimage_lcr.get_csv_data(dataPath)
-	X_train, y_train = shuffle(X_train,y_train, random_state=14)
+	X_train, y_train = processData.get_csv_data(dataPath)
+	X_train, y_train = shuffle(X_train, y_train, random_state=14)
 	X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=0.3, random_state=14)
 	model = get_model()
 	model.summary()
@@ -91,10 +91,10 @@ if __name__=="__main__":
     # Checkpoint to save best weights only
 	checkpoint = ModelCheckpoint(filepath, monitor = "loss", verbose=1, save_best_only=True, mode='min')
 	callbacks_list = [checkpoint]
-	model.fit_generator(processimage_lcr.generate_batch(X_train, y_train), steps_per_epoch=200,
+	model.fit_generator(processData.generate_batch(X_train, y_train), steps_per_epoch=200,
     					epochs=10,
     					verbose=1,
-    					validation_data=processimage_lcr.generate_batch(X_validation, y_validation),
+    					validation_data=processData.generate_batch(X_validation, y_validation),
     					validation_steps=50,
     					callbacks = callbacks_list)
 	print ('Saving model weights and configuration file')
