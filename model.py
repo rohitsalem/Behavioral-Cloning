@@ -21,7 +21,7 @@ import keras.backend.tensorflow_backend as KTF
 import os
 dataPath =  "data/driving_log.csv"
 
-GPU_FRACTION = 0.5
+GPU_FRACTION = 0.8
 # Function to set the fraction of GPU to use
 def get_session(gpu_fraction=GPU_FRACTION):
     num_threads = os.environ.get('OMP_NUM_THREADS')
@@ -35,7 +35,7 @@ KTF.set_session(get_session())
 
 # Defining model to train. Inspired from Nvidia- End-to-end model for cars
 def get_model():
-	model = Sequential([
+    model = Sequential([
 	# Normalizimg the image to -1.0 to 1.0
 		Lambda(processData.normalize_image, input_shape=(66, 200, 3)),
 		# Convolutional layer 1 24@31x98 | 5x5 kernel | 2x2 stride | elu activation
@@ -75,8 +75,9 @@ def get_model():
 		# Output
 		Dense(1,activation = 'linear', kernel_initializer ='he_normal')
 		])
-	model.compile(optimizer=Adam(0.0001), loss='mse')
-	return model
+    model.compile(optimizer=Adam(0.0001), loss='mse')
+    # model.load_weights('model.h5')
+    return model
 
 
 
@@ -92,7 +93,7 @@ if __name__=="__main__":
 	checkpoint = ModelCheckpoint(filepath, monitor = "loss", verbose=1, save_best_only=True, mode='min')
 	callbacks_list = [checkpoint]
 	model.fit_generator(processData.generate_batch(X_train, y_train), steps_per_epoch=200,
-    					epochs=10,
+    					epochs=15,
     					verbose=1,
     					validation_data=processData.generate_batch(X_validation, y_validation),
     					validation_steps=50,

@@ -25,7 +25,7 @@ def crop_image(image):
 
 def random_brightness(image):
 	# randomly select the gamma values
-    gamma = random.uniform(0.5,2.2)
+    gamma = random.uniform(0.3,2.2)
     # Using the formula O=I^(1/G) O=output image, I = input image, G = Gamma
     inverseGamma = 1.0 / gamma
     # build a lookup table mapping the pixel values [0, 255] to
@@ -36,15 +36,15 @@ def random_brightness(image):
 
 # Combine all the processing for the images: crop->resize->random_brightness
 def process_image(image):
+     image = random_brightness(image)
      image = crop_image(image)
      image = resize_image(image)
-     image = random_brightness(image)
      return  image
 
 # Read the CSV file for image location and steering angle
 def get_csv_data(file):
     image_names, steering_angles = [],[]
-    steering_offset = 0.27 # Offset for left and right cameras
+    steering_offset = 0.275 # Offset for left and right cameras
     with open(file,'r') as f:
         reader = csv.reader(f)
         next(reader,None)
@@ -66,7 +66,7 @@ def fetch_images(X_train, y_train, batch_size):
         image = X_train[index]
         # print (angle)
         if(-thresh<angle[0]<thresh):
-            if(zero_count<15):
+            if(zero_count<batch_size*.5):
                 images_and_angles.append((image,angle))
                 zero_count = zero_count + 1
                 count = count + 1
