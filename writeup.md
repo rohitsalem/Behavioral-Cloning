@@ -32,8 +32,11 @@ python drive.py model.h5
 
 1. I used the Nvidia's end-to-end learning for self-driving cars as the model architecture. The model takes in images as input and predicts the steering angle as output. 
 The Model Architecture can be depicted in this image, taken directly from the paper:
+
 ![alt text][image1]
+
 The Model summary from the keras function is here with little modifications to the Nvidia's architecture:
+
 ![alt text][image7]
 
 2. Attempts to reduce overfitting in the model:
@@ -86,4 +89,4 @@ Resized Image/Final processed image:
 
 * The network was able to handle sharp turns also smoothly, there was a little jitter while going straight this might be because of using the the left and right images and not the right offset, it can be correct by using appropriate offset which could be obtained by trail and error.
 
-* The video of the run can be found [.here](https://youtu.be/BKlFEks0HgM)
+* The video of the run can be found [here](https://youtu.be/BKlFEks0HgM)
