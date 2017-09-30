@@ -65,14 +65,19 @@ Solution Design Approach:
 Here is a sample image obtained from the dataset which has undergone the pre-processing:
 
 Random brightness:
+
 ![alt text][image3]
+
 ![alt text][image4]
+
 ![alt text][image5]
 
 Cropped Image:
+
 ![alt text][image2]
 
 Resized Image/Final processed image:
+
 ![alt text][image6]
 
 * To make use of the left and right images as well, I sampled the right and left images as well randomly along with the center images. I added an offset of `0.275` to the left image and subtracted `0.275` for the right image form the steering angle to imitiate it as a center image itself. This really made use of the limited dataset, not requiring a lot of data.
