@@ -3,6 +3,7 @@ import base64
 from datetime import datetime
 import os
 import shutil
+import tensorflow as tf
 
 import numpy as np
 import socketio
@@ -15,12 +16,23 @@ import cv2
 from keras.models import load_model
 import h5py
 from keras import __version__ as keras_version
-
+import keras.backend.tensorflow_backend as KTF
 sio = socketio.Server()
 app = Flask(__name__)
 model = None
 prev_image_array = None
 
+GPU_FRACTION = 0.5
+# Function to set the fraction of GPU to use
+def get_session(gpu_fraction=GPU_FRACTION):
+    num_threads = os.environ.get('OMP_NUM_THREADS')
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_fraction)
+    if num_threads:
+        return tf.Session(config=tf.ConfigProto(
+            gpu_options=gpu_options, intra_op_parallelism_threads=num_threads))
+    else:
+        return tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+KTF.set_session(get_session())
 
 class SimplePIController:
     def __init__(self, Kp, Ki):
@@ -44,7 +56,7 @@ class SimplePIController:
 
 
 controller = SimplePIController(0.1, 0.002)
-set_speed = 12
+set_speed = 25
 controller.set_desired(set_speed)
 
 
@@ -140,3 +152,5 @@ if __name__ == '__main__':
 
     # deploy as an eventlet WSGI server
     eventlet.wsgi.server(eventlet.listen(('', 4567)), app)
+    from keras import backend as K
+    K.clear_session()
