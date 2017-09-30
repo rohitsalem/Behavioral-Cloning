@@ -2,14 +2,13 @@
 
 [//]: # (Image References)
 
-[image1]: ./examples/placeholder.png "Model Visualization"
-[image2]: ./examples/placeholder.png "Grayscaling"
-[image3]: ./examples/placeholder_small.png "Recovery Image"
-[image4]: ./examples/placeholder_small.png "Recovery Image"
-[image5]: ./examples/placeholder_small.png "Recovery Image"
-[image6]: ./examples/placeholder_small.png "Normal Image"
-[image7]: ./examples/placeholder_small.png "Flipped Image"
-
+[image1]: ./images/architecture.png "Model Architecture"
+[image2]: ./images/crop_image.jpg "Cropped Image"
+[image3]: ./images/random_brightness1.jpg "Random Brightness 1"
+[image4]: ./images/random_brightness2.jpg "Random Brightness 2"
+[image5]: ./images/random_brightness3.jpg "Random Brightness 3"
+[image6]: ./images/processed_image.jpg "Final Processed image"
+[image7]: ./images/model_summary.png "Model Summary"
 
 1. Submission includes all required files and can be used to run the simulator in autonomous mode
 
@@ -34,74 +33,52 @@ python drive.py model.h5
 1. I used the Nvidia's end-to-end learning for self-driving cars as the model architecture. The model takes in images as input and predicts the steering angle as output. 
 The Model Architecture can be depicted in this image, taken directly from the paper:
 ![alt text][image1]
+The Model summary from the keras function is here with little modifications to the Nvidia's architecture:
+![alt text][image7]
 
+2. Attempts to reduce overfitting in the model:
+The model contains dropout layers in order to reduce overfitting and can be seen in the above picture which depicts the model summary. Having Dropouts forces not only every neuron to learn some features but also reduces overfitting!  
+I also used regulaizers to penalize the weights if they are getting too biased to the dataset.
 
-####2. Attempts to reduce overfitting in the model
+3. Model parameter tuning
+The model used the Adam optimizer with initial learning rate of 0.0001. I also tuned the regularizer values if the model started overfitting. 
 
-The model contains dropout layers in order to reduce overfitting (model.py lines 21). 
+4. Appropriate training data
+I used the dataset provided by Udacity and also added some of my own data where it was necessary like near the sharp turns.
 
-The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 10-16). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
+**Approach**
 
-####3. Model parameter tuning
+Solution Design Approach:
 
-The model used an adam optimizer, so the learning rate was not tuned manually (model.py line 25).
+* I used a Nvidia end-to-end model for self-driving cars as the model architecture as I already mentioned, the data was split into train and validation dataset before the training. 
 
-####4. Appropriate training data
+* The tain data and the validation data were loaded as required by the `fit.generator()` function in keras and were generated in batches using the `dataProcess.py` file which has functions to generate them. The data was shuffled before being fed into the `fit.generator()`. 
 
-Training data was chosen to keep the vehicle driving on the road. I used a combination of center lane driving, recovering from the left and right sides of the road ... 
+* The data was definitely biased if seen intutively or if plotted because most of the time the car is driving straight !! implying the steering to be '0' for most of the time. To handle this baised dataset, I would load the dataset in such a way that there are not more than 50% of the data samples that are zeros, hence removing the biasing. This helped me to handle the turns 
 
-For details about how I created the training data, see the next section. 
+* To reduce the overfitting, I used dropout layers and regularlizers in the layers.
 
-###Model Architecture and Training Strategy
+* Then the model failed in some of those really sharp turns. So I collected the data at the sharp turns and added it to the main dataset, then trained the model again. Because of the increased probabiltiy of these turns being sampled, it worked after the new training process.
 
-####1. Solution Design Approach
+* Before starting the training process, I pre-processed the images to crop, resize and adjust the brightness randomly. I cropped out the unnessary part of the image which the car sees: like the bonet, top sky. Then resized the image (220,66) to fit in as the input to the network and also changed the brightness randomly to handle different lightning conditions.
 
-The overall strategy for deriving a model architecture was to ...
+Here is a sample image obtained from the dataset which has undergone the pre-processing:
 
-My first step was to use a convolution neural network model similar to the ... I thought this model might be appropriate because ...
-
-In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model had a low mean squared error on the training set but a high mean squared error on the validation set. This implied that the model was overfitting. 
-
-To combat the overfitting, I modified the model so that ...
-
-Then I ... 
-
-The final step was to run the simulator to see how well the car was driving around track one. There were a few spots where the vehicle fell off the track... to improve the driving behavior in these cases, I ....
-
-At the end of the process, the vehicle is able to drive autonomously around the track without leaving the road.
-
-####2. Final Model Architecture
-
-The final model architecture (model.py lines 18-24) consisted of a convolution neural network with the following layers and layer sizes ...
-
-Here is a visualization of the architecture (note: visualizing the architecture is optional according to the project rubric)
-
-![alt text][image1]
-
-####3. Creation of the Training Set & Training Process
-
-To capture good driving behavior, I first recorded two laps on track one using center lane driving. Here is an example image of center lane driving:
-
-![alt text][image2]
-
-I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to .... These images show what a recovery looks like starting from ... :
-
+Random brightness:
 ![alt text][image3]
 ![alt text][image4]
 ![alt text][image5]
 
-Then I repeated this process on track two in order to get more data points.
+Cropped Image:
+![alt text][image2]
 
-To augment the data sat, I also flipped images and angles thinking that this would ... For example, here is an image that has then been flipped:
-
+Resized Image/Final processed image:
 ![alt text][image6]
-![alt text][image7]
 
-Etc ....
+* To make use of the left and right images as well, I sampled the right and left images as well randomly along with the center images. I added an offset of `0.275` to the left image and subtracted `0.275` for the right image form the steering angle to imitiate it as a center image itself. This really made use of the limited dataset, not requiring a lot of data.
 
-After the collection process, I had X number of data points. I then preprocessed this data by ...
+* Using the left and right images essentially made to correct the car from going off road. As it simulated what we would do when we are going to the left ramp (turn right) and vise versa, this is handled by using the steering offset! 
 
+* The network was able to handle sharp turns also smoothly, there was a little jitter while going straight this might be because of using the the left and right images and not the right offset, it can be correct by using appropriate offset which could be obtained by trail and error.
 
-I finally randomly shuffled the data set and put Y% of the data into a validation set. 
-
-I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was Z as evidenced by ... I used an adam optimizer so that manually training the learning rate wasn't necessary.
+* The video of the run can be found [.here](https://youtu.be/BKlFEks0HgM)
